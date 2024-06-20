@@ -5,7 +5,7 @@
 
   tasks:
     - name: get ubuntu version
-      ansible.builtin.shell: cat /etc/lsb-release | grep DISTRIB_DESCRIPTION | sed 's/[A-Za-z=_ "]//g'
+      ansible.builtin.shell: zabbix_agentd -t ubuntu.version
 
     - name: get nginx version
-      ansible.builtin.shell: /usr/sbin/nginx -v 2>&1 | sed 's/[A-Za-z=_":()/ ]//g' | cut -c1-4
+      ansible.builtin.shell: zabbix_agentd -t nginx.version
