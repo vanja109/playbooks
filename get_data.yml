@@ -1,0 +1,11 @@
+---
+- name: Copy zabbix-conf files for monitoring
+  hosts: local
+  remote_user: puzerkin
+
+  tasks:
+    - name: get ubuntu version
+      ansible.builtin.shell: cat /etc/lsb-release | grep DISTRIB_DESCRIPTION | sed 's/[A-Za-z=_ "]//g'
+
+    - name: get nginx version
+      ansible.builtin.shell: /usr/sbin/nginx -v 2>&1 | sed 's/[A-Za-z=_":()/ ]//g' | cut -c1-4

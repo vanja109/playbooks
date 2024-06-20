@@ -1,0 +1,25 @@
+---
+- name: Copy zabbix-conf files for monitoring
+  hosts: local
+  remote_user: puzerkin
+  become: yes
+
+  tasks:
+    - name: Copy ubuntu.conf
+      ansible.builtin.copy:
+        src: /home/puzerkin/zabbix_configs/ubuntu.conf
+        dest: /etc/zabbix/zabbix_agentd.conf.d/
+
+    - name: Copy nginx.conf
+      ansible.builtin.copy:
+        src: /home/puzerkin/zabbix_configs/nginx.conf
+        dest: /etc/zabbix/zabbix_agentd.conf.d/
+
+    - name: restart zabbix-agent.service
+      service:
+        name: zabbix-agent
+        state: restarted
+
+
+
+
