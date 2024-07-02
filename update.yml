@@ -1,0 +1,57 @@
+---
+#1 копируем nginx, keykloak, postgresql, netplan, apt в /home
+#2 делаем архив /home
+#3 копируем его на локальный компуктер администратора
+#4 распространяем sources.list на удаленный хосты
+#5 apt update && apt upgrade
+#6 reboot
+
+- name: Update && upgrade ubuntu
+  hosts: sjtest
+  remote_user: puzerkin
+  become: yes
+
+  tasks:
+    - name: copy critical data to /home for backup on remote hosts
+      ansible.builtin.copy:
+        src: '{{item}}'
+        dest: /home/puzerkin/
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - /etc/netplan
+        - /etc/apt
+        - /etc/postgresql
+      ignore_errors: yes
+
+    - name: create archive /home
+      community.general.archive:
+        path: /home
+        dest: /home/puzerkin/archive.tar.gz
+
+    - name: copy archive to local host
+      ansible.builtin.fetch:
+        src: /home/puzerkin/archive.tar.gz
+        dest: /home/puzerkin/backup_data/
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: copy sources.list to remote hosts
+      ansible.builtin.copy:
+        src: /home/puzerkin/ansible_files/ubuntu_n_nginx_updating/sources.list
+        dest: /etc/apt/
+        #force: true
+        owner: root
+        group: root
+        mode: '0644'
+        
+    - name: apt update && upgrade
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: yes
+
+    - name: reboot
+      ansible.builtin.reboot:
