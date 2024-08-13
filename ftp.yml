@@ -1,0 +1,66 @@
+- name: Install FTP server
+  hosts: ftp-orm
+  remote_user: puzerkin
+  become: yes
+
+  tasks:
+    - name: update && upgrade
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: install vsftpd
+      ansible.builtin.apt:
+        name: vsftpd
+
+    - name: uncomment strings
+      ansible.builtin.replace:
+        path: /etc/vsftpd.conf
+        regexp: "{{ item.regexp  }}"
+        replace: "{{ item.replace  }}"
+      loop:
+        - { regexp: '#write_enable=YES', replace: 'write_enable=YES' }
+        - { regexp: '#chroot_local_user=YES', replace: 'chroot_local_user=YES' }
+
+    - name: add strings
+      ansible.builtin.lineinfile:
+        path: /etc/vsftpd.conf
+        line: "{{ item.line  }}"
+      loop:
+        - { line: 'allow_writeable_chroot=YES' }
+        - { line: 'pasv_enable=YES' }
+        - { line: 'pasv_max_port=60000' }
+        - { line: 'pasv_min_port=65535' }
+
+    - name: allow ufw ssh from master-host
+      community.general.ufw:
+        rule: allow
+        src: 192.168.114.78
+        proto: any
+        port: '22'
+
+    - name: allow ftp ports
+      community.general.ufw:
+        rule: allow
+        proto: any
+        port: "{{ item.port  }}"
+      loop:
+        - { port: '20' }
+        - { port: '21' }
+
+    - name: allow port range 60000-65535
+      community.general.ufw:
+        rule: allow
+        port: 60000:65535
+        proto: tcp
+
+    - name: enable ufw
+      community.general.ufw:
+        state: enabled
+
+    - name: enable & restart vsftpd
+      ansible.builtin.service:
+        name: vsftpd
+        enabled: true
+        state: restarted
+
+
